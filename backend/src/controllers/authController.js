@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import {User} from  '../models/user.js';
+import models from '../models/index.js';
+const { User } = models;
 
 export const register =async (req,res)=>{
 
@@ -23,7 +24,7 @@ export const register =async (req,res)=>{
 export const login =async (req,res)=>{
     try{
         const{email,password}=req.body;
-        if(!email || !password){{
+        if(!email || !password){
             return res.status(400).json({error:"All fields are required"});
         }
         const user = await User.findOne({where:{email}});
@@ -36,9 +37,10 @@ export const login =async (req,res)=>{
         }
         // If password matches generate JWT
         const token = jwt.sign({id:user.id,email:user.email},process.env.JWT_SECRET,{expiresIn:process.env.TOKEN_EXPIRY_TIME});
+        
 
-        res.json({message:"Login successful",token});
+            res.json({message:"Login successful",token});
+        } catch(err){
+            return res.status(500).json({error:err.message});
+        }
     }
-    }catch(err){
-        return res.status(500).json({error:err.message});
-    }}

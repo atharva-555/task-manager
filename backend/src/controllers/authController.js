@@ -36,11 +36,32 @@ export const login =async (req,res)=>{
             return res.status(401).json({error:"Invalid credentials"});
         }
         // If password matches generate JWT
-        const token = jwt.sign({id:user.id,email:user.email},process.env.JWT_SECRET,{expiresIn:process.env.TOKEN_EXPIRY_TIME});
+
+        const token = jwt.sign({id:user.id,email:user.email,role:user.role},process.env.JWT_SECRET,{expiresIn:process.env.TOKEN_EXPIRY_TIME});
         
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // Secure in production
+            sameSite: 'strict',
+            maxAge: parseInt(process.env.TOKEN_EXPIRY_TIME)
+            // maxAge: process.env.TOKEN_EXPIRY_TIME,
+            });
 
             res.json({message:"Login successful",token});
         } catch(err){
             return res.status(500).json({error:err.message});
         }
     }
+
+export const logout = async (req,res)=>{
+    try{
+    res.clearCookie('jwt', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    });
+    res.json({ message: 'Logout successful' });
+    }catch(err){
+                  return res.status(500).json({error:err.message});
+    }
+}

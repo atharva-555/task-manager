@@ -12,6 +12,7 @@ export default (sequelize, DataTypes) => {
     tableName: 'Users',
     indexes: [{ unique: true, fields: ['email'] }],
   });
+
   User.associate = (models) => {
     User.hasMany(models.Task, { foreignKey: 'createdBy', as: 'createdTasks' });
     User.hasMany(models.Task, { foreignKey: 'assignedTo', as: 'assignedTasks' });

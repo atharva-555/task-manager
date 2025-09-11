@@ -1,7 +1,7 @@
 import models from "../models/index.js";
 import {ROLES} from "../constants/roles.js";
 const { Task, User } = models;
-
+import { Op } from "sequelize";
 // Create a new task
 export const createTask = async (req, res) => {
   try {
@@ -50,6 +50,7 @@ export const createTask = async (req, res) => {
 // Get All tasks
 export const getAllTasks = async (req, res) => {
     // console.log("role =",req.user.role);
+
   try {
     const { role,  id:userId } = req.user;
     // console.log(req.user);
@@ -65,6 +66,48 @@ export const getAllTasks = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+    export const getTasksByFilter = async (req, res) => {
+       try {
+        //  const { status, dueDate, dueDateBefore, dueDateAfter, assignedTo } = req.query;
+
+        const { role,  id:userId } = req.user;
+        const { status, dueDate, dueDateBefore, dueDateAfter, assignedTo } = req.body;
+        const filters = {};
+        
+        if (status) {
+          filters.status = status;
+        }
+        if(dueDate){
+          filters.dueDate = dueDate;
+        }
+        if(dueDateBefore){
+          filters.dueDate = { ...filters.dueDate, [Op.lte]: dueDateBefore };
+        }
+        if(dueDateAfter){
+          filters.dueDate = { ...filters.dueDate , [Op.gte]: dueDateAfter };
+        }
+        if (assignedTo) {
+            filters.assignedTo = parseInt(assignedTo);
+        }
+
+        // console.log("Filters:",filters)
+        let tasks;
+        if (role === ROLES.ADMIN) {
+         const tasks = await Task.findAll({
+          filters,
+          order: [['createdAt', 'DESC']],
+        });
+        } else {
+          tasks = await Task.findAll({ where: { assignedTo: userId ,isDeleted:false,...filters} });
+        }
+        
+
+         res.json(tasks);
+       } catch (err) {
+         res.status(500).json({ error: err.message });
+       }
+     };
 
 export const getTaskById = async (req, res) => {
     // console.log("role =",req.user.role);

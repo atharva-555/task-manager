@@ -9,7 +9,7 @@ router.post('/createTask',roleGuard(['admin','user']),createTask);
 router.get('/getAllTasks',roleGuard(['admin','user']),getAllTasks);
 router.get('/getTasksByFilter',roleGuard(['admin','user']),getTasksByFilter);
 router.get('/getTaskById/:id',roleGuard(['admin','user']),getTaskById);
-router.post('/deleteTask/:id',roleGuard(['admin']),deleteTask);
+router.delete('/deleteTask/:id',roleGuard(['admin']),deleteTask);
 router.put('/updateTask/:id',roleGuard(['admin','user']),updateTask);
 // router.post('/:id/assignTask',roleGuard(['admin']),assignTask);
 

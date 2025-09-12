@@ -1,15 +1,38 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import models from '../models/index.js';
+import validate from '../utils/inputValidations.js';
+
 const { User } = models;
 
 export const register =async (req,res)=>{
 
     try{
     const {name,email,password}=req.body;
+
+    // Validate inputs
+    const nameValidate = validate.name(name, 'name', true);
+    const emailValidate = validate.email(email, 'email', true);
+    const passwordValidate = validate.password(password, 'password', true);
+
+    // console.log("nameValidate:",nameValidate,"emailValidate:",emailValidate,"passwordValidate:",passwordValidate);
+
+    if(nameValidate){
+        return res.status(400).json({error:nameValidate.message});
+    }
+    if(emailValidate){
+        return res.status(400).json({error:emailValidate.message});
+    }
+    if(passwordValidate){
+        return res.status(400).json({error:passwordValidate.message});
+    };
+
+    // Check for missing fields
     if(!name || !email || !password){
         return res.status(400).json({error:"All fields are required"});
     }
+
+    // Check if user already exists
     const existingUser=await User.findOne({where:{email}});
     if(existingUser){
         return res.status(400).json({ error: 'Email already exists' });
@@ -24,6 +47,18 @@ export const register =async (req,res)=>{
 export const login =async (req,res)=>{
     try{
         const{email,password}=req.body;
+
+         // Validate inputs
+        const emailValidate = validate.email(email, 'email', true);
+        const passwordValidate = validate.password(password, 'password', true);
+
+        if(emailValidate){
+            return res.status(400).json({error:emailValidate.message});
+        }
+        if(passwordValidate){
+            return res.status(400).json({error:passwordValidate.message});
+        };
+
         if(!email || !password){
             return res.status(400).json({error:"All fields are required"});
         }

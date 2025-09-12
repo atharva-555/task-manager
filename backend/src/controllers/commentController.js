@@ -1,8 +1,5 @@
 
 import models from '../models/index.js';
-
-
-
 const { Comment, Task } = models;
 
 // TO POST A COMMENT AND REPLY
@@ -15,9 +12,13 @@ export const addComment = async(req,res)=>{
         }
 
         const task = await Task.findOne({where:{id:taskId,isDeleted:false}});
+
+        // Validate if the task is present or not
         if(!task){
             return res.status(404).json({error:"Task not found"});
         }
+
+        // Check if the user is authorized to comment on this task
         if(task.assignedTo !== req.user.id && req.user.role !== 'admin'){
             return res.status(403).json({error:"Unauthorized to comment on this task"});
         }
@@ -39,6 +40,17 @@ export const addComment = async(req,res)=>{
         return res.status(201).json(comment);
 
 
+    }catch(err){
+        res.status(500).json({error:err.message});
+    }
+}
+
+
+export const getCommentByTask=async(req,res)=>{
+    const { id:taskId } = req.body;
+    try{
+        const comments = await Comment.findAll({where:{taskId}});
+        return res.status(200).json(comments);
     }catch(err){
         res.status(500).json({error:err.message});
     }

@@ -1,12 +1,64 @@
 import models from "../models/index.js";
 import {ROLES} from "../constants/roles.js";
+import {TASKSTATUS, TASKSTATUS_VALUES} from "../constants/taskStatus.js";
+import {RECURRENCE, RECURRENCE_VALUES} from "../constants/recurrence.js";
+
 const { Task, User } = models;
 import { Op } from "sequelize";
+import validate from '../utils/inputValidations.js';
 // Create a new task
 export const createTask = async (req, res) => {
   try {
     const { role,  id:userId } = req.user;
-    let { title, description, status, dueDate } = req.body;
+    const { title, description, status, dueDate,recurrence } = req.body;
+    // if(status){
+    //   console.log("GOT STATUS IN BODY");
+    // }
+    // console.log(req.body);
+
+    // VALIDATIONS
+    if(title){
+      const titleValidation = validate.title(title, 'title', true);
+      if (titleValidation) {
+        return res.status(400).json({ error: titleValidation.message });
+      }
+    }
+
+    if(dueDate){
+      const dueDateValidation = validate.dueDate(dueDate, 'dueDate');
+      if (dueDateValidation) {
+        return res.status(400).json({ error: dueDateValidation.message });
+      }
+    }
+
+    // console.log("typeof status :",typeof status);
+    // console.log("length :",status.length);
+    // console.log( status == null);
+
+   if(status.length == 0){
+        return res.status(400).json({ error: "Status cannot be empty" });
+      } 
+ 
+    if(status){
+      //  console.log("length :",status.length);
+      // console.log("GOT STATUS IN if condition");
+        const statusValidation = validate.enum(status, 'status',TASKSTATUS_VALUES);
+        if (statusValidation) {
+          return res.status(400).json({ error: statusValidation.message });
+          
+        }
+      }
+
+    if(recurrence){
+      const recurrenceValidation = validate.enum(recurrence, 'recurrence', RECURRENCE_VALUES);
+      if (recurrenceValidation) {
+        return res.status(400).json({ error: recurrenceValidation.message });
+        
+      }
+    }
+    
+
+
     let assignedTo;
     if(role === ROLES.ADMIN){
       assignedTo = req.body.assignedTo;
@@ -36,6 +88,7 @@ export const createTask = async (req, res) => {
       status,
       dueDate,
       createdBy,
+      recurrence
     });
 
     return res.status(201).json({
@@ -55,6 +108,7 @@ export const getAllTasks = async (req, res) => {
     const { role,  id:userId } = req.user;
     // console.log(req.user);
     let tasks;
+
     if (role === ROLES.ADMIN) {
       tasks = await Task.findAll();
     } else {
@@ -73,6 +127,31 @@ export const getAllTasks = async (req, res) => {
 
         const { role,  id:userId } = req.user;
         const { status, dueDate, dueDateBefore, dueDateAfter, assignedTo } = req.body;
+
+        // Validations
+        if (dueDate) {
+          const dueDateValidation = validate.dueDate(dueDate, 'dueDate');
+          if (dueDateValidation) return res.status(400).json({ error: dueDateValidation.message });
+        }
+        if (dueDateBefore) {
+          const dueDateBeforeValidation = validate.dueDate(dueDateBefore, 'dueDateBefore');
+          if (dueDateBeforeValidation) return res.status(400).json({ error: dueDateBeforeValidation.message });
+        }
+        if (dueDateAfter) {
+          const dueDateAfterValidation = validate.dueDate(dueDateAfter, 'dueDateAfter');
+          if (dueDateAfterValidation) return res.status(400).json({ error: dueDateAfterValidation.message });
+        }
+
+        if(status ){
+          const statusValidation = validate.enum(status, 'status', TASKSTATUS_VALUES);
+          if (statusValidation) {
+            return res.status(400).json({ error: statusValidation.message });
+            
+          }
+        }
+
+
+
         const filters = {};
         
         if (status) {
@@ -94,16 +173,20 @@ export const getAllTasks = async (req, res) => {
         // console.log("Filters:",filters)
         let tasks;
         if (role === ROLES.ADMIN) {
-         const tasks = await Task.findAll({
-          filters,
+          tasks = await Task.findAll({
+          where:  filters,
           order: [['createdAt', 'DESC']],
         });
         } else {
-          tasks = await Task.findAll({ where: { assignedTo: userId ,isDeleted:false,...filters} });
+          if(assignedTo && parseInt(assignedTo) !== userId) {
+            return res.status(403).json({ error: "Unauthorized to view tasks assigned to other users" });
+          }
+          tasks = await Task.findAll({ where: { ...filters,assignedTo: userId ,isDeleted:false} });
         }
         
+        // console.log(tasks);
+         return res.json(tasks);
 
-         res.json(tasks);
        } catch (err) {
          res.status(500).json({ error: err.message });
        }
@@ -134,7 +217,37 @@ export const getTaskById = async (req, res) => {
 
 export const updateTask = async (req, res) => {
   try {
-    const { title, description, status, dueDate, assignedTo } = req.body;
+    const { title, description, status, dueDate, assignedTo,recurrence } = req.body;
+
+    // VALIDATIONS
+    if(title){
+      const titleValidation = validate.title(title, 'title', true);
+      if (titleValidation) {
+        return res.status(400).json({ error: titleValidation.message });
+      }
+    }
+    if (dueDate) {
+      const dueDateValidation = validate.dueDate(dueDate, 'dueDate');
+      if (dueDateValidation) return res.status(400).json({ error: dueDateValidation.message });
+    }
+
+    if(status){
+      const statusValidation = validate.enum(status, 'status', TASKSTATUS_VALUES);
+      if (statusValidation) {
+        return res.status(400).json({ error: statusValidation.message });
+        
+      }
+    }
+
+    if(recurrence){
+      const recurrenceValidation = validate.enum(recurrence, 'recurrence', RECURRENCE_VALUES);
+      if (recurrenceValidation) {
+        return res.status(400).json({ error: recurrenceValidation.message });
+        
+      }
+    }
+
+
     const task = await Task.findOne({ where: { id: req.params.id, isDeleted: false } });
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
@@ -147,7 +260,7 @@ export const updateTask = async (req, res) => {
       const user = await User.findByPk(assignedTo);
       if (!user) return res.status(400).json({ error: 'Assignee not found' });
     }
-    await task.update({ title, description, status, dueDate, assignedTo });
+    await task.update({ title, description, status, dueDate, assignedTo,recurrence });
     res.json(task,{message:"Task updated successfully"});
   } catch (err) {
     res.status(400).json({ error: err.message });

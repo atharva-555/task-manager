@@ -70,19 +70,26 @@ export const login =async (req,res)=>{
         if(!await bcrypt.compare(password,user.password)){
             return res.status(401).json({error:"Invalid credentials"});
         }
+
+        // console.log(user);
+        
         // If password matches generate JWT
 
         const token = jwt.sign({id:user.id,email:user.email,role:user.role},process.env.JWT_SECRET,{expiresIn:process.env.TOKEN_EXPIRY_TIME});
         
+        console.log("token:",token);
         res.cookie('jwt', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production', // Secure in production
+            // Since we are using localhost, we need to set sameSite to 'lax'
+            // sameSite: "lax",
+            // ENABLE FOR PRODUCTION
             sameSite: 'strict',
             maxAge: parseInt(process.env.TOKEN_EXPIRY_TIME)
             // maxAge: process.env.TOKEN_EXPIRY_TIME,
             });
 
-            res.json({message:"Login successful",token});
+            res.json({message:"Login successful",token,user:{id:user.id,name:user.name,email:user.email,role:user.role}});
         } catch(err){
             return res.status(500).json({error:err.message});
         }
@@ -98,5 +105,65 @@ export const logout = async (req,res)=>{
     res.json({ message: 'Logout successful' });
     }catch(err){
                   return res.status(500).json({error:err.message});
+    }
+}
+
+// Get current user info - Enhanced endpoint for session recovery
+export const getCurrentUser = async (req, res) => {
+    try {
+        // req.user should be populated by auth middleware
+        if (!req.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        // Get complete user data from database
+        const user = await User.findOne({
+            where: { id: req.user.id },
+            attributes: ['id', 'name', 'email', 'role', 'createdAt'] 
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        console.log("ENdpoint called");
+        console.log("USER_ID::",user.id);
+        
+        // Return user data in format expected by frontend
+        res.json({
+            success: true,
+            message: 'User info retrieved',
+            data: {
+                id: user.id,
+                email: user.email,
+                role: user.role || 'user', // Default to 'user' if no role provided
+                name: user.name,
+            }
+        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+}
+
+// Get all users (Admin only)
+export const getAllUsers = async (req, res) => {
+    try {
+        // Only admins can access this endpoint
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Access denied. Admin role required.' });
+        }
+
+        const users = await User.findAll({
+            attributes: ['id', 'name', 'email', 'role', 'createdAt'],
+            order: [['createdAt', 'DESC']]
+        });
+
+        res.json({
+            success: true,
+            message: 'Users retrieved successfully',
+            data: users
+        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
     }
 }

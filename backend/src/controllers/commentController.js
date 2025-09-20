@@ -1,6 +1,6 @@
 
 import models from '../models/index.js';
-const { Comment, Task } = models;
+const { Comment, Task, User } = models;
 
 // TO POST A COMMENT AND REPLY
 export const addComment = async(req,res)=>{
@@ -47,9 +47,21 @@ export const addComment = async(req,res)=>{
 
 
 export const getCommentByTask=async(req,res)=>{
-    const { id:taskId } = req.body;
+    const { taskId } = req.query;
+
+    console.log("TASKID :",taskId);
+    if (!taskId) {
+        return res.status(400).json({error:"Task ID is required"});
+    }
+    
     try{
-        const comments = await Comment.findAll({where:{taskId}});
+        const comments = await Comment.findAll({
+            where:{taskId},
+            include: [
+                { model: User, attributes: ['id', 'name', 'email'] }
+            ],
+            order: [['createdAt', 'ASC']] // Order by creation time
+        });
         return res.status(200).json(comments);
     }catch(err){
         res.status(500).json({error:err.message});

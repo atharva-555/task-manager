@@ -35,9 +35,9 @@ export const createTask = async (req, res) => {
     // console.log("length :",status.length);
     // console.log( status == null);
 
-   if(status.length == 0){
-        return res.status(400).json({ error: "Status cannot be empty" });
-      } 
+   if(status !== undefined && (!status || status.length === 0)){
+      return res.status(400).json({ error: "Status cannot be empty" });
+    } 
  
     if(status){
       //  console.log("length :",status.length);
@@ -110,9 +110,20 @@ export const getAllTasks = async (req, res) => {
     let tasks;
 
     if (role === ROLES.ADMIN) {
-      tasks = await Task.findAll();
+      tasks = await Task.findAll({
+  include: [
+    { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+    { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+  ],
+  order: [['createdAt', 'DESC']]
+});
+
     } else {
-      tasks = await Task.findAll({ where: { assignedTo: userId ,isDeleted:false} });
+      tasks = await Task.findAll({ where: { assignedTo: userId ,isDeleted:false},
+      include: [
+      { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+      { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+    ], order: [['createdAt', 'DESC']]});
     }
     // console.log(role)
     return res.json(tasks);
@@ -126,7 +137,7 @@ export const getAllTasks = async (req, res) => {
         //  const { status, dueDate, dueDateBefore, dueDateAfter, assignedTo } = req.query;
 
         const { role,  id:userId } = req.user;
-        const { status, dueDate, dueDateBefore, dueDateAfter, assignedTo } = req.body;
+        const { status, dueDate, dueDateBefore, dueDateAfter, assignedTo,isDeleted } = req.body;
 
         // Validations
         if (dueDate) {
@@ -142,6 +153,11 @@ export const getAllTasks = async (req, res) => {
           if (dueDateAfterValidation) return res.status(400).json({ error: dueDateAfterValidation.message });
         }
 
+        // Allow empty status for "All" filtering - remove this validation
+        if(status !== undefined && (!status || status.length === 0)){
+          return res.status(400).json({ error: "Status cannot be empty" });
+        } 
+ 
         if(status ){
           const statusValidation = validate.enum(status, 'status', TASKSTATUS_VALUES);
           if (statusValidation) {
@@ -157,31 +173,43 @@ export const getAllTasks = async (req, res) => {
         if (status) {
           filters.status = status;
         }
-        if(dueDate){
-          filters.dueDate = dueDate;
-        }
-        if(dueDateBefore){
-          filters.dueDate = { ...filters.dueDate, [Op.lte]: dueDateBefore };
-        }
-        if(dueDateAfter){
-          filters.dueDate = { ...filters.dueDate , [Op.gte]: dueDateAfter };
-        }
+        // if(dueDate){
+        //   filters.dueDate = dueDate;
+        // }
+        // if(dueDateBefore){
+        //   filters.dueDate = { ...filters.dueDate, [Op.lte]: dueDateBefore };
+        // }
+        // if(dueDateAfter){
+        //   filters.dueDate = { ...filters.dueDate , [Op.gte]: dueDateAfter };
+        // }
         if (assignedTo) {
             filters.assignedTo = parseInt(assignedTo);
         }
+        if(isDeleted!==null && isDeleted!==undefined){
+          filters.isDeleted = isDeleted;
+        }
 
-        // console.log("Filters:",filters)
+        console.log("Filters:",filters)
         let tasks;
         if (role === ROLES.ADMIN) {
           tasks = await Task.findAll({
           where:  filters,
+          include: [
+          { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+          { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+        ],
           order: [['createdAt', 'DESC']],
         });
         } else {
           if(assignedTo && parseInt(assignedTo) !== userId) {
             return res.status(403).json({ error: "Unauthorized to view tasks assigned to other users" });
           }
-          tasks = await Task.findAll({ where: { ...filters,assignedTo: userId ,isDeleted:false} });
+          tasks = await Task.findAll({ where: { ...filters,assignedTo: userId ,isDeleted:false},
+          include: [
+      { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+      { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+    ]
+    , order: [['createdAt', 'DESC']], });
         }
         
         // console.log(tasks);
@@ -291,6 +319,35 @@ export const deleteTask = async (req, res) => {
     if (!task) return res.status(404).json({ error: 'Task not found' });
     await task.update({isDeleted:true});
     return res.status(200).json({message:"Task deleted successfully"});
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// Get all deleted tasks (Admin only)
+export const getDeletedTasks = async (req, res) => {
+  try {
+    const { role } = req.user;
+
+    // Only admins can view deleted tasks
+    if (role !== 'admin') {
+      return res.status(403).json({ error: "Access denied. Admin role required." });
+    }
+
+    const deletedTasks = await Task.findAll({
+      where: { isDeleted: true },
+      include: [
+        { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+        { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+      ],
+      order: [['updatedAt', 'DESC']]
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Deleted tasks retrieved successfully',
+      data: deletedTasks
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

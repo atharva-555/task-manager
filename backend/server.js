@@ -4,6 +4,7 @@ import {sequelize} from './src/models/index.js';
 import authRoutes from './src/routes/authRoutes.js';
 import taskRoutes from  './src/routes/taskRoutes.js';
 import commentRoutes from './src/routes/commentRoutes.js';
+import constantsRoutes from './src/routes/constantsRoutes.js';
 // import { swaggerSpec, swaggerUi } from "./swagger.js";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -32,6 +33,7 @@ app.use(cookieParser());
 app.use('/auth', authRoutes);
 app.use('/task',taskRoutes);
 app.use('/comment',commentRoutes);
+app.use('/', constantsRoutes);
 
 app.get('/', (req, res) => res.send('Task Manager API'));
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

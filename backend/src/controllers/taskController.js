@@ -1,12 +1,64 @@
 import models from "../models/index.js";
 import {ROLES} from "../constants/roles.js";
-const { Task, User } = models;
+import {TASKSTATUS, TASKSTATUS_VALUES} from "../constants/taskStatus.js";
+import {RECURRENCE, RECURRENCE_VALUES} from "../constants/recurrence.js";
 
+const { Task, User } = models;
+import { Op } from "sequelize";
+import validate from '../utils/inputValidations.js';
 // Create a new task
 export const createTask = async (req, res) => {
   try {
     const { role,  id:userId } = req.user;
-    let { title, description, status, dueDate } = req.body;
+    const { title, description, status, dueDate,recurrence } = req.body;
+    // if(status){
+    //   console.log("GOT STATUS IN BODY");
+    // }
+    // console.log(req.body);
+
+    // VALIDATIONS
+    if(title){
+      const titleValidation = validate.title(title, 'title', true);
+      if (titleValidation) {
+        return res.status(400).json({ error: titleValidation.message });
+      }
+    }
+
+    if(dueDate){
+      const dueDateValidation = validate.dueDate(dueDate, 'dueDate');
+      if (dueDateValidation) {
+        return res.status(400).json({ error: dueDateValidation.message });
+      }
+    }
+
+    // console.log("typeof status :",typeof status);
+    // console.log("length :",status.length);
+    // console.log( status == null);
+
+   if(status !== undefined && (!status || status.length === 0)){
+      return res.status(400).json({ error: "Status cannot be empty" });
+    } 
+ 
+    if(status){
+      //  console.log("length :",status.length);
+      // console.log("GOT STATUS IN if condition");
+        const statusValidation = validate.enum(status, 'status',TASKSTATUS_VALUES);
+        if (statusValidation) {
+          return res.status(400).json({ error: statusValidation.message });
+          
+        }
+      }
+
+    if(recurrence){
+      const recurrenceValidation = validate.enum(recurrence, 'recurrence', RECURRENCE_VALUES);
+      if (recurrenceValidation) {
+        return res.status(400).json({ error: recurrenceValidation.message });
+        
+      }
+    }
+    
+
+
     let assignedTo;
     if(role === ROLES.ADMIN){
       assignedTo = req.body.assignedTo;
@@ -36,6 +88,7 @@ export const createTask = async (req, res) => {
       status,
       dueDate,
       createdBy,
+      recurrence
     });
 
     return res.status(201).json({
@@ -50,14 +103,27 @@ export const createTask = async (req, res) => {
 // Get All tasks
 export const getAllTasks = async (req, res) => {
     // console.log("role =",req.user.role);
+
   try {
     const { role,  id:userId } = req.user;
     // console.log(req.user);
     let tasks;
+
     if (role === ROLES.ADMIN) {
-      tasks = await Task.findAll();
+      tasks = await Task.findAll({
+  include: [
+    { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+    { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+  ],
+  order: [['createdAt', 'DESC']]
+});
+
     } else {
-      tasks = await Task.findAll({ where: { assignedTo: userId ,isDeleted:false} });
+      tasks = await Task.findAll({ where: { assignedTo: userId ,isDeleted:false},
+      include: [
+      { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+      { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+    ], order: [['createdAt', 'DESC']]});
     }
     // console.log(role)
     return res.json(tasks);
@@ -65,6 +131,94 @@ export const getAllTasks = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+    export const getTasksByFilter = async (req, res) => {
+       try {
+        //  const { status, dueDate, dueDateBefore, dueDateAfter, assignedTo } = req.query;
+
+        const { role,  id:userId } = req.user;
+        const { status, dueDate, dueDateBefore, dueDateAfter, assignedTo,isDeleted } = req.body;
+
+        // Validations
+        if (dueDate) {
+          const dueDateValidation = validate.dueDate(dueDate, 'dueDate');
+          if (dueDateValidation) return res.status(400).json({ error: dueDateValidation.message });
+        }
+        if (dueDateBefore) {
+          const dueDateBeforeValidation = validate.dueDate(dueDateBefore, 'dueDateBefore');
+          if (dueDateBeforeValidation) return res.status(400).json({ error: dueDateBeforeValidation.message });
+        }
+        if (dueDateAfter) {
+          const dueDateAfterValidation = validate.dueDate(dueDateAfter, 'dueDateAfter');
+          if (dueDateAfterValidation) return res.status(400).json({ error: dueDateAfterValidation.message });
+        }
+
+        // Allow empty status for "All" filtering - remove this validation
+        if(status !== undefined && (!status || status.length === 0)){
+          return res.status(400).json({ error: "Status cannot be empty" });
+        } 
+ 
+        if(status ){
+          const statusValidation = validate.enum(status, 'status', TASKSTATUS_VALUES);
+          if (statusValidation) {
+            return res.status(400).json({ error: statusValidation.message });
+            
+          }
+        }
+
+
+
+        const filters = {};
+        
+        if (status) {
+          filters.status = status;
+        }
+        // if(dueDate){
+        //   filters.dueDate = dueDate;
+        // }
+        // if(dueDateBefore){
+        //   filters.dueDate = { ...filters.dueDate, [Op.lte]: dueDateBefore };
+        // }
+        // if(dueDateAfter){
+        //   filters.dueDate = { ...filters.dueDate , [Op.gte]: dueDateAfter };
+        // }
+        if (assignedTo) {
+            filters.assignedTo = parseInt(assignedTo);
+        }
+        if(isDeleted!==null && isDeleted!==undefined){
+          filters.isDeleted = isDeleted;
+        }
+
+        console.log("Filters:",filters)
+        let tasks;
+        if (role === ROLES.ADMIN) {
+          tasks = await Task.findAll({
+          where:  filters,
+          include: [
+          { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+          { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+        ],
+          order: [['createdAt', 'DESC']],
+        });
+        } else {
+          if(assignedTo && parseInt(assignedTo) !== userId) {
+            return res.status(403).json({ error: "Unauthorized to view tasks assigned to other users" });
+          }
+          tasks = await Task.findAll({ where: { ...filters,assignedTo: userId ,isDeleted:false},
+          include: [
+      { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+      { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+    ]
+    , order: [['createdAt', 'DESC']], });
+        }
+        
+        // console.log(tasks);
+         return res.json(tasks);
+
+       } catch (err) {
+         res.status(500).json({ error: err.message });
+       }
+     };
 
 export const getTaskById = async (req, res) => {
     // console.log("role =",req.user.role);
@@ -91,7 +245,37 @@ export const getTaskById = async (req, res) => {
 
 export const updateTask = async (req, res) => {
   try {
-    const { title, description, status, dueDate, assignedTo } = req.body;
+    const { title, description, status, dueDate, assignedTo,recurrence } = req.body;
+
+    // VALIDATIONS
+    if(title){
+      const titleValidation = validate.title(title, 'title', true);
+      if (titleValidation) {
+        return res.status(400).json({ error: titleValidation.message });
+      }
+    }
+    if (dueDate) {
+      const dueDateValidation = validate.dueDate(dueDate, 'dueDate');
+      if (dueDateValidation) return res.status(400).json({ error: dueDateValidation.message });
+    }
+
+    if(status){
+      const statusValidation = validate.enum(status, 'status', TASKSTATUS_VALUES);
+      if (statusValidation) {
+        return res.status(400).json({ error: statusValidation.message });
+        
+      }
+    }
+
+    if(recurrence){
+      const recurrenceValidation = validate.enum(recurrence, 'recurrence', RECURRENCE_VALUES);
+      if (recurrenceValidation) {
+        return res.status(400).json({ error: recurrenceValidation.message });
+        
+      }
+    }
+
+
     const task = await Task.findOne({ where: { id: req.params.id, isDeleted: false } });
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
@@ -104,7 +288,7 @@ export const updateTask = async (req, res) => {
       const user = await User.findByPk(assignedTo);
       if (!user) return res.status(400).json({ error: 'Assignee not found' });
     }
-    await task.update({ title, description, status, dueDate, assignedTo });
+    await task.update({ title, description, status, dueDate, assignedTo,recurrence });
     res.json(task,{message:"Task updated successfully"});
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -135,6 +319,35 @@ export const deleteTask = async (req, res) => {
     if (!task) return res.status(404).json({ error: 'Task not found' });
     await task.update({isDeleted:true});
     return res.status(200).json({message:"Task deleted successfully"});
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+// Get all deleted tasks (Admin only)
+export const getDeletedTasks = async (req, res) => {
+  try {
+    const { role } = req.user;
+
+    // Only admins can view deleted tasks
+    if (role !== 'admin') {
+      return res.status(403).json({ error: "Access denied. Admin role required." });
+    }
+
+    const deletedTasks = await Task.findAll({
+      where: { isDeleted: true },
+      include: [
+        { model: User, as: 'creator', attributes: ['id', 'name', 'email'] },
+        { model: User, as: 'assignee', attributes: ['id', 'name', 'email'] }
+      ],
+      order: [['updatedAt', 'DESC']]
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Deleted tasks retrieved successfully',
+      data: deletedTasks
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

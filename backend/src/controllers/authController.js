@@ -84,7 +84,7 @@ export const login =async (req,res)=>{
             // Since we are using localhost, we need to set sameSite to 'lax'
             // sameSite: "lax",
             // ENABLE FOR PRODUCTION
-            sameSite: 'strict',
+            sameSite: 'none',
             maxAge: parseInt(process.env.TOKEN_EXPIRY_TIME)
             // maxAge: process.env.TOKEN_EXPIRY_TIME,
             });

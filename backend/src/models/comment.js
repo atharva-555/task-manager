@@ -21,4 +21,5 @@ export default (sequelize, DataTypes) => {
     Comment.hasMany(models.Comment,{foreignKey:'parentId' ,as:'replies'});
   };
   return Comment;
+  
 };

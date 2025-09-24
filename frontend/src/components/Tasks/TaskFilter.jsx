@@ -8,6 +8,7 @@ const TaskFilter = ({ filters, onFilterChange, onClearFilters }) => {
 // Load user data for getting its role
     const {user} = useSelector(state=>state.auth);
 
+
     // LOADING USERS TO DISPLAY ON Filter OPTIONS
       const [users, setUsers] = useState([]);
       useEffect(() => {
@@ -19,6 +20,7 @@ const TaskFilter = ({ filters, onFilterChange, onClearFilters }) => {
       const loadUsers = async () => {
         // setLoadingUsers(true);
         try {
+            if(user.role!=='admin'){return}
           const response = await axiosInstance.get('auth/getAllUsers');
           setUsers(response.data.data || []);
         } catch (error) {

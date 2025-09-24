@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { authService } from '../services/authService';
-import { useDispatch } from 'react-redux';
-import { Mail, Lock,Eye,EyeOff,LogIn } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Mail, Lock,Eye,EyeOff,LogIn, Loader2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -11,7 +11,11 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+    // Get loading state from Redux
+  const { loading } = useSelector(state => state.auth);
+
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
     // form data
     const [formData,setformData] = useState({
@@ -82,27 +86,32 @@ const Login = () => {
             return
         }
         
-        const response = await dispatch(authService.login(formData));
-        if(response.success && response.user){
+        setIsLoading(true);
+        try {
+            const response = await dispatch(authService.login(formData));
+            if(response.success && response.user){
 
-            // Get the intended destination from location state or default based on role
-            // const from = location.state?.from?.pathname;
-            let redirectPath;
-            
-            // Check role and redirect the user
-            if (response.user.role === 'admin') {
-                // redirectPath = from && from.startsWith('/dashboard/admin') ? from : '/dashboard/admin';
-                redirectPath = '/dashboard/admin';
-            } else if (response.user.role === 'user') {
-                // redirectPath = from && from.startsWith('/dashboard/user') ? from : '/dashboard/user';
-                redirectPath = '/dashboard/user';
-            } else {
-              // If the role is unknown
-                redirectPath = '/dashboard/user';
+                // Get the intended destination from location state or default based on role
+                // const from = location.state?.from?.pathname;
+                let redirectPath;
+                
+                // Check role and redirect the user
+                if (response.user.role === 'admin') {
+                    // redirectPath = from && from.startsWith('/dashboard/admin') ? from : '/dashboard/admin';
+                    redirectPath = '/dashboard/admin';
+                } else if (response.user.role === 'user') {
+                    // redirectPath = from && from.startsWith('/dashboard/user') ? from : '/dashboard/user';
+                    redirectPath = '/dashboard/user';
+                } else {
+                  // If the role is unknown
+                    redirectPath = '/dashboard/user';
+                }
+                
+                // Navigate to the appropriate dashboard
+                navigate(redirectPath, { replace: true });
             }
-            
-            // Navigate to the appropriate dashboard
-            navigate(redirectPath, { replace: true });
+        } finally {
+            setIsLoading(false);
         }
 
     }
@@ -149,8 +158,26 @@ const Login = () => {
                 </div>
                 
 
-                <button className=' mx-auto my-4 flex justify-center items-center bg-primary-600 text-white px-4 py-2 rounded-md ' type='submit'>
-                    <LogIn className='w-5 h-5'/><p className='ml-2'>Login</p>
+                <button 
+                    className={`mx-auto my-4 flex justify-center items-center px-4 py-2 rounded-md text-white ${
+                        isLoading 
+                            ? 'bg-primary-600 cursor-not-allowed' 
+                            : 'bg-primary-600 hover:bg-primary-700'
+                    }`} 
+                    type='submit'
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className='w-5 h-5 animate-spin'/>
+                            <p className='ml-2'>Logging in...</p>
+                        </>
+                    ) : (
+                        <>
+                            <LogIn className='w-5 h-5'/>
+                            <p className='ml-2'>Login</p>
+                        </>
+                    )}
                 </button>
             </form>
 

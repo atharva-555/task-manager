@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Lock, Mail, UserPlus, User, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, UserPlus, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { authService } from '../services/authService';
@@ -13,6 +13,7 @@ const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
 
     // form data
     const [formData,setformData] = useState({
@@ -91,8 +92,13 @@ const validateForm = () => {
             return
         }
         
-        console.log(formData);
-        dispatch(authService.register(formData,navigate));
+        setIsLoading(true);
+        try {
+            console.log(formData);
+            await dispatch(authService.register(formData,navigate));
+        } finally {
+            setIsLoading(false);
+        }
     }
 
   return (
@@ -164,8 +170,26 @@ const validateForm = () => {
                 </div>
 
 
-                <button className=' mx-auto my-4 flex justify-center items-center bg-primary-600 text-white px-4 py-2 rounded-md ' type='submit'>
-                    <UserPlus className='w-5 h-5'/><p className='ml-2'>Register</p>
+                <button 
+                    className={`mx-auto my-4 flex justify-center items-center px-4 py-2 rounded-md text-white ${
+                        isLoading 
+                            ? 'bg-primary-600 cursor-not-allowed' 
+                            : 'bg-primary-600 hover:bg-primary-700'
+                    }`} 
+                    type='submit'
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className='w-5 h-5 animate-spin'/>
+                            <p className='ml-2'>Creating account...</p>
+                        </>
+                    ) : (
+                        <>
+                            <UserPlus className='w-5 h-5'/>
+                            <p className='ml-2'>Register</p>
+                        </>
+                    )}
                 </button>
             </form>
 

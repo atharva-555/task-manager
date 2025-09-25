@@ -5,106 +5,106 @@ import validate from '../utils/inputValidations.js';
 
 const { User } = models;
 
-export const register =async (req,res)=>{
+export const register = async (req, res) => {
 
-    try{
-    const {name,email,password}=req.body;
+    try {
+        const { name, email, password } = req.body;
 
-    // Validate inputs
-    const nameValidate = validate.name(name, 'name', true);
-    const emailValidate = validate.email(email, 'email', true);
-    const passwordValidate = validate.password(password, 'password', true);
-
-    // console.log("nameValidate:",nameValidate,"emailValidate:",emailValidate,"passwordValidate:",passwordValidate);
-
-    if(nameValidate){
-        return res.status(400).json({error:nameValidate.message});
-    }
-    if(emailValidate){
-        return res.status(400).json({error:emailValidate.message});
-    }
-    if(passwordValidate){
-        return res.status(400).json({error:passwordValidate.message});
-    };
-
-    // Check for missing fields
-    if(!name || !email || !password){
-        return res.status(400).json({error:"All fields are required"});
-    }
-
-    // Check if user already exists
-    const existingUser=await User.findOne({where:{email}});
-    if(existingUser){
-        return res.status(400).json({ error: 'Email already exists' });
-    }
-    const hashedPassword=await bcrypt.hash(password,12);
-    const newUser = await User.create({name,email,password:hashedPassword});
-    res.status(201).json({message:"User registered successfully",userID:newUser.id});
-    }catch(err){return res.status(500).json({error:err.message});  }
-
-}
-
-export const login =async (req,res)=>{
-    try{
-        const{email,password}=req.body;
-
-         // Validate inputs
+        // Validate inputs
+        const nameValidate = validate.name(name, 'name', true);
         const emailValidate = validate.email(email, 'email', true);
         const passwordValidate = validate.password(password, 'password', true);
 
-        if(emailValidate){
-            return res.status(400).json({error:emailValidate.message});
+        // console.log("nameValidate:",nameValidate,"emailValidate:",emailValidate,"passwordValidate:",passwordValidate);
+
+        if (nameValidate) {
+            return res.status(400).json({ error: nameValidate.message });
         }
-        if(passwordValidate){
-            return res.status(400).json({error:passwordValidate.message});
+        if (emailValidate) {
+            return res.status(400).json({ error: emailValidate.message });
+        }
+        if (passwordValidate) {
+            return res.status(400).json({ error: passwordValidate.message });
         };
 
-        if(!email || !password){
-            return res.status(400).json({error:"All fields are required"});
+        // Check for missing fields
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: "All fields are required" });
         }
-        const user = await User.findOne({where:{email}});
 
-        if(!user){
-            return res.status(401).json({error:"User not found"});
+        // Check if user already exists
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email already exists' });
         }
-        if(!await bcrypt.compare(password,user.password)){
-            return res.status(401).json({error:"Invalid credentials"});
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const newUser = await User.create({ name, email, password: hashedPassword });
+        res.status(201).json({ message: "User registered successfully", userID: newUser.id });
+    } catch (err) { return res.status(500).json({ error: err.message }); }
+
+}
+
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Validate inputs
+        const emailValidate = validate.email(email, 'email', true);
+        const passwordValidate = validate.password(password, 'password', true);
+
+        if (emailValidate) {
+            return res.status(400).json({ error: emailValidate.message });
+        }
+        if (passwordValidate) {
+            return res.status(400).json({ error: passwordValidate.message });
+        };
+
+        if (!email || !password) {
+            return res.status(400).json({ error: "All fields are required" });
+        }
+        const user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            return res.status(401).json({ error: "User not found" });
+        }
+        if (!await bcrypt.compare(password, user.password)) {
+            return res.status(401).json({ error: "Invalid credentials" });
         }
 
         // console.log(user);
-        
+
         // If password matches generate JWT
 
-        const token = jwt.sign({id:user.id,email:user.email,role:user.role},process.env.JWT_SECRET,{expiresIn:process.env.TOKEN_EXPIRY_TIME});
-        
-        console.log("token:",token);
+        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_EXPIRY_TIME });
+
+        console.log("token:", token);
         res.cookie('jwt', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production', // Secure in production
             // Since we are using localhost, we need to set sameSite to 'lax'
             // sameSite: "lax",
             // ENABLE FOR PRODUCTION
-            sameSite: 'none',
+            sameSite: 'strict',
             maxAge: parseInt(process.env.TOKEN_EXPIRY_TIME)
             // maxAge: process.env.TOKEN_EXPIRY_TIME,
-            });
+        });
 
-            res.json({message:"Login successful",token,user:{id:user.id,name:user.name,email:user.email,role:user.role}});
-        } catch(err){
-            return res.status(500).json({error:err.message});
-        }
+        res.json({ message: "Login successful", token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
     }
+}
 
-export const logout = async (req,res)=>{
-    try{
-    res.clearCookie('jwt', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    });
-    res.json({ message: 'Logout successful' });
-    }catch(err){
-                  return res.status(500).json({error:err.message});
+export const logout = async (req, res) => {
+    try {
+        res.clearCookie('jwt', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+        });
+        res.json({ message: 'Logout successful' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
     }
 }
 
@@ -119,7 +119,7 @@ export const getCurrentUser = async (req, res) => {
         // Get complete user data from database
         const user = await User.findOne({
             where: { id: req.user.id },
-            attributes: ['id', 'name', 'email', 'role', 'createdAt'] 
+            attributes: ['id', 'name', 'email', 'role', 'createdAt']
         });
 
         if (!user) {
@@ -127,8 +127,8 @@ export const getCurrentUser = async (req, res) => {
         }
 
         console.log("ENdpoint called");
-        console.log("USER_ID::",user.id);
-        
+        console.log("USER_ID::", user.id);
+
         // Return user data in format expected by frontend
         res.json({
             success: true,

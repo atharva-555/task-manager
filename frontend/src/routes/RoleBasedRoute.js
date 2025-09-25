@@ -15,14 +15,14 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // Not authenticated
   if (!isAuthenticated || !user) {
-    console.log("Navigation to login .IS authenticated :",isAuthenticated);
+    // console.log("Navigation to login .IS authenticated :",isAuthenticated);
     return <Navigate to="/login" replace />;
   }
 
   // Role not allowed
   if (!allowedRoles.includes(user.role)) {
     // console.log("Navigation to login");
-    console.log("Navigation to login .Role :",user.role);
+    // console.log("Navigation to login .Role :",user.role);
     return <Navigate to="/login" replace />;
   }
 

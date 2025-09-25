@@ -6,25 +6,24 @@ import { openModal,closeModal } from "../../store/slices/uiSlice";
 import { setFilters, clearFilters } from "../../store/slices/taskSlice";
 import TaskForm from './TaskForm';
 import TaskFilter from "./TaskFilter";
+import Spinner from "../UI/Spinner";
 
 const TaskList=() =>{
 
     const dispatch = useDispatch();
 
-    const {filteredTasks,filters} = useSelector(state => state.task);
+    const {filteredTasks,filters,loading} = useSelector(state => state.task);
     const allTasks = useSelector(state => state.task.tasks);
     // Undeleted tasks
     const tasks =  allTasks.filter(task=>!task.isDeleted);
 
     useEffect(() => {
       const hasFilters = Object.values(filters).some(value => value !== '');
-      console.log("filters",filters);
       if (hasFilters) {
         dispatch(taskService.filterTasks(filters));
-      } else {
-        // dispatch(applyClientSideFilters());
       }
-    }, [dispatch, filters,allTasks.length]);
+      // Note: Removed allTasks.length dependency to prevent double API calls
+    }, [dispatch, filters]);
 
     const handleFilterChange = (newFilters) => {
       dispatch(setFilters(newFilters));
@@ -34,11 +33,21 @@ const TaskList=() =>{
       dispatch(clearFilters());
     };
 
+    // Helper function to refresh tasks with current filters
+    const refreshTasksWithFilters = () => {
+      console.log("Filtering")
+      const hasFilters = Object.values(filters).some(value => value !== '');
+      if (hasFilters) {
+        dispatch(taskService.filterTasks(filters));
+      } else {
+        dispatch(taskService.fetchTasks());
+      }
+    };
 
     // fetch tasks
-     useEffect(() => {
-        dispatch(taskService.fetchTasks());
-      }, [dispatch]);
+    //  useEffect(() => {
+    //     dispatch(taskService.fetchTasks());
+    //   }, [dispatch]);
 
   const [editingTask, setEditingTask] = useState(null);
   const modals = useSelector(state => state.ui).modals;
@@ -48,8 +57,11 @@ const TaskList=() =>{
         dispatch(openModal('taskForm'))
       };
 
-    const handleDeleteTask = (taskId) => {
-        dispatch(taskService.deleteTask(taskId));
+    const handleDeleteTask = async (taskId) => {
+        const result = await dispatch(taskService.deleteTask(taskId));
+        if (result.success) {
+          refreshTasksWithFilters(); // Use helper function to maintain filters
+        }
     };
 
       const handleCloseForm = () => {
@@ -62,7 +74,7 @@ const TaskList=() =>{
         const result = await dispatch(taskService.createTask(taskData));
         if (result.success) {
           dispatch(closeModal('taskForm'));
-          dispatch(taskService.fetchTasks());
+          refreshTasksWithFilters(); // Use helper function to maintain filters
         }
       };
     
@@ -70,7 +82,7 @@ const TaskList=() =>{
         const result = await dispatch(taskService.updateTask(taskId,taskData));
         if(result.success){
           dispatch(closeModal('taskForm'));
-          dispatch(taskService.fetchTasks());
+          refreshTasksWithFilters(); // Use helper function to maintain filters
         }
       }
     
@@ -84,27 +96,45 @@ const TaskList=() =>{
             onClearFilters={handleClearFilters}
           />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-         
-
-            {filteredTasks.map(task=>{
-                return(
-                    <TaskCard key={task.id} task={task} onEdit={handleEditTask} onDelete={handleDeleteTask}/>
-                )
-            })}
-             {/* Show Taskform modal */}
-    {modals.taskForm && (
-        <TaskForm
-          task={editingTask}
-          onSubmit={editingTask ? 
-            (data) =>handleUpdateTask(editingTask.id,data) : 
-            handleCreateTask
-          }
-          onClose={handleCloseForm}
-        />
-      )}
-   
-        </div>
+        
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Spinner size="lg" text="Loading tasks..." />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredTasks.length > 0 ? (
+              filteredTasks.map(task=>{
+                  return(
+                      <TaskCard key={task.id} task={task} onEdit={handleEditTask} onDelete={handleDeleteTask}/>
+                  )
+              })
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <div className="text-gray-500 text-lg">No tasks found</div>
+                <div className="text-gray-400 text-sm mt-2">
+                  {Object.values(filters).some(value => value !== '') 
+                    ? 'Try adjusting your filters' 
+                    : 'Create your first task to get started'
+                  }
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Show Taskform modal */}
+        {modals.taskForm && (
+            <TaskForm
+              task={editingTask}
+              onSubmit={editingTask ? 
+                (data) =>handleUpdateTask(editingTask.id,data) : 
+                handleCreateTask
+              }
+              onClose={handleCloseForm}
+            />
+          )}
         </>
         
     )

@@ -80,8 +80,8 @@ const Login = () => {
     // Submit function 
     const handleSubmit = async (e)=>{
         e.preventDefault();
-        console.log(formData);
-        console.log("erros:",errors);
+        // console.log(formData);
+        // console.log("erros:",errors);
         if(!validateForm()){
             return
         }

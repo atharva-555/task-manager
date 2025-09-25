@@ -26,7 +26,7 @@ export const taskService ={
         dispatch(setLoading(true));
         try{
             const response = await axiosInstance.post('/task/createTask', taskData);
-            console.log('Task created successfully:', response.data);
+            // console.log('Task created successfully:', response.data);
             dispatch(setLoading(false));
             toast.success('Task created successfully!');
             return { success: true, data: response.data };
@@ -34,7 +34,7 @@ export const taskService ={
             const errorMessage = error.response?.data?.error || 'Failed to create task';
             dispatch(setError(errorMessage));
             toast.error(errorMessage);
-            console.error('Error creating task:', error);
+            // console.error('Error creating task:', error);
             return { success: false, error: errorMessage };
         }
     },
@@ -42,10 +42,10 @@ export const taskService ={
     updateTask:(taskId,taskData)=>async (dispatch)=>{
         dispatch(setLoading(true));
         try{
-            console.log("TASKID:",taskId)
-            console.log("TaskData : ",taskData);
+            // console.log("TASKID:",taskId)
+            // console.log("TaskData : ",taskData);
             const response = await axiosInstance.put('/task/updateTask/'+taskId,taskData);
-            console.log('Task updated successfully:', response.data);
+            // console.log('Task updated successfully:', response.data);
             toast.success('Task updated successfully!');
             return { success: true, data: response.data };
         }
@@ -62,8 +62,7 @@ export const taskService ={
         dispatch(setLoading(true));
         try{
             const response = await axiosInstance.delete('/task/deleteTask/'+taskId);
-            console.log('Task deleted successfully:', response.data);
-            dispatch(taskService.fetchTasks());
+            // console.log('Task deleted successfully:', response.data);
             toast.success('Task deleted successfully!');
             return { success: true, data: response.data };
         }
@@ -71,7 +70,7 @@ export const taskService ={
             const errorMessage = error.response?.data?.error || 'Failed to delete task';
             dispatch(setError(errorMessage));
             toast.error(errorMessage);
-            console.error('Error deleting task:', error);
+            // console.error('Error deleting task:', error);
             return { success: false, error: errorMessage };
         }
     },
@@ -82,7 +81,7 @@ export const taskService ={
           const response = await axiosInstance.post('/comment/addComment',commentData);
           dispatch(addComment(response.data));
           toast.success('Comment added successfully!');
-          console.log('Comment added:', response.data);
+          // console.log('Comment added:', response.data);
           return { success: true, data: response.data };
         } catch (error) {
           const errorMessage = error.response?.data?.error || 'Failed to add comment';
@@ -93,11 +92,11 @@ export const taskService ={
       },
 
       getCommentByTask:(taskId)=>async(dispatch)=>{
-        dispatch(setLoading(true));
+        // dispatch(setLoading(true));
         try{
             const response = await axiosInstance.get('/comment/getCommentByTask?taskId='+taskId);
-            console.log('Comments fetched successfully:', response.data);
-            dispatch(setLoading(false));
+            // console.log('Comments fetched successfully:', response.data);
+            // dispatch(setLoading(false));
             return { success: true, data: response.data };
         }
         catch(error){
@@ -133,15 +132,15 @@ export const taskService ={
     });
 
                 // console.log('Original filters:', filters);
-                console.log('Cleaned filters:', cleanFilters);
+                // console.log('Cleaned filters:', cleanFilters);
                 
                 // If no meaningful filters, fetch all tasks instead of calling filter API
                 if (Object.keys(cleanFilters).length === 0) {
-                console.log('📋 No filters applied, fetching all tasks');
+                // console.log('📋 No filters applied, fetching all tasks');
                 const response = await axiosInstance('/task/getAllTasks');
                 dispatch(setTasks(response.data));
                 } else {
-                console.log('🔍 Applying filters:', cleanFilters);
+                // console.log('🔍 Applying filters:', cleanFilters);
               const response = await axiosInstance.post('/task/getTasksByFilter',cleanFilters);                dispatch(setTasks(response.data));
                 }
                 

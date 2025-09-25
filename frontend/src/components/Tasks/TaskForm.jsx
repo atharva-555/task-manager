@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { X, Save, Plus, Calendar, User, FileText, Flag } from 'lucide-react';
+import { X, Save, Plus, Calendar, User, FileText, Flag, Loader2 } from 'lucide-react';
 import Spinner from '../UI/Spinner';
 import axiosInstance from '../../services/api';
 // import { ButtonSpinner } from '../UI/Spinner';
@@ -14,6 +14,7 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
   // Add state for users list
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -116,21 +117,12 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
       return;
     }
 
-
-    
-    // const submitData = {
-    //   ...formData,
-    //   assignedTo: formData.assignedTo ? parseInt(formData.assignedTo) : undefined,
-    // };
-    
-    // // Remove empty fields
-    // Object.keys(submitData).forEach(key => {
-    //   if (submitData[key] === '' || submitData[key] === undefined) {
-    //     delete submitData[key];
-    //   }
-    // });
-
-    const response = await onSubmit(formData);
+    setIsSubmitting(true);
+    try {
+      const response = await onSubmit(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -292,19 +284,23 @@ const TaskForm = ({ task, onSubmit, onClose }) => {
               type="button" 
               className="btn btn-outline rounded-md p-2 text-red-600"
               onClick={onClose}
-              disabled={loading}
+              disabled={isSubmitting || loading}
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="btn btn-primary flex items-center bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 active:bg-primary-800 p-2 rounded-md"
-              disabled={loading}
+              className={`btn btn-primary flex items-center p-2 rounded-md text-white ${
+                isSubmitting 
+                  ? 'bg-primary-400 cursor-not-allowed' 
+                  : 'bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 active:bg-primary-800'
+              }`}
+              disabled={isSubmitting || loading}
             >
-              {loading ? (
+              {isSubmitting ? (
                 <>
-                  <Spinner className="mr-2" />
-                  Saving...
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {task ? 'Updating...' : 'Creating...'}
                 </>
               ) : (
                 <>

@@ -49,7 +49,7 @@ export const addComment = async(req,res)=>{
 export const getCommentByTask=async(req,res)=>{
     const { taskId } = req.query;
 
-    console.log("TASKID :",taskId);
+    // console.log("TASKID :",taskId);
     if (!taskId) {
         return res.status(400).json({error:"Task ID is required"});
     }

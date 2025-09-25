@@ -41,8 +41,8 @@ export const taskSlice = createSlice({
             const taskIndex = state.tasks.findIndex(task=>task.id === taskId);
 
             if(taskIndex !== -1){
-                console.log(state.tasks[taskIndex]);
-                console.log(taskData)
+                // console.log(state.tasks[taskIndex]);
+                // console.log(taskData)
                 state.tasks[taskIndex] = {...state.tasks[taskIndex],...taskData};
             }
 

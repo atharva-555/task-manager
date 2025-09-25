@@ -6,7 +6,7 @@ export default (req, res, next) => {
 
   // HTTP Only Cookie
   const token = req.cookies.jwt;
-  console.log("token recieved :",token);
+  // console.log("token recieved :",token);
   
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });    

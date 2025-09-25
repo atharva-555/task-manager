@@ -6,12 +6,12 @@ import { Navigate } from "react-router-dom";
 
 export const authService = {
     login:(credentials)=>async (dispatch)=>{
-        console.log("Login API");
+        // console.log("Login API");
         dispatch(setLoading(true));
         try{
             const response = await axiosInstance.post('/auth/login', credentials);
             if(response.status === 200){
-            console.log("response data from Login API :", response.data);
+            // console.log("response data from Login API :", response.data);
             toast.success(response.data);
 
             // Gather user data from the API response
@@ -41,7 +41,7 @@ export const authService = {
     },
 
     register:(credentials,navigate)=>async(dispatch)=>{
-        console.log("Register API");
+        // console.log("Register API");
         dispatch(setLoading(true));
         try{
             const response = await axiosInstance.post('/auth/register', credentials);
@@ -79,13 +79,13 @@ export const authService = {
     checkAuth:()=>async(dispatch)=>{
         dispatch(setLoading(true));
         try{
-            console.log("API HITTING get current user");
+            // console.log("API HITTING get current user");
             const response = await axiosInstance('/auth/getcurrentuser');
             if(response.status === 200){
 
                 // Extract user data from backend response format
                 const userData = response.data;
-                console.log("userdata:",userData)
+                // console.log("userdata:",userData)
                 const user = {
                     id: userData.data.id || 1,
                     name:userData.data.name || "Name",

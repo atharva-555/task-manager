@@ -94,7 +94,7 @@ const validateForm = () => {
         
         setIsLoading(true);
         try {
-            console.log(formData);
+            // console.log(formData);
             await dispatch(authService.register(formData,navigate));
         } finally {
             setIsLoading(false);

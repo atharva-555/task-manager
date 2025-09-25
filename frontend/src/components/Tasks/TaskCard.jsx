@@ -1,9 +1,10 @@
 import {Circle,Clock,CheckCircle,Edit3,Trash2,User,Calendar,MessageCircle} from 'lucide-react'
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { taskService } from '../../services/taskService';
 import { useDispatch,useSelector } from 'react-redux';
 import Comments from './Comments';
 const TaskCard = ({task,onEdit,onDelete}) => {
+
 
     const dispatch = useDispatch();
     // const taskData={
@@ -20,6 +21,11 @@ const TaskCard = ({task,onEdit,onDelete}) => {
     const [comments, setComments] = useState([]);
     const [showComments, setShowComments] = useState(false);
     const [loadingComments, setLoadingComments] = useState(false);
+
+    
+  useEffect(() => {
+  // console.log("showComments state changed:", showComments);
+}, [showComments]);
 
     const handleAddComment = async (commentData) => {
         try {
@@ -40,20 +46,26 @@ const TaskCard = ({task,onEdit,onDelete}) => {
 
    
     const loadComments = async () => {
-        if (loadingComments) return;
+        // if (loadingComments) return;
         
         setLoadingComments(true);
         try {
-            console.log('Loading comments for task:', task.id);
+            // console.log('Loading comments for task:', task.id);
             const response = await dispatch(taskService.getCommentByTask(task.id));
-            console.log('Raw comments response:', response.data);
-            setComments(response.data);
-            // Organize comments with replies
-           const organizedComments = organizeComments(response.data);
-           console.log('Organized comments:', organizedComments);
-           setComments(organizedComments);
+            // console.log('Raw comments response:', response);
+            
+            if (response.success && response.data) {
+                // console.log('Comments data:', response.data);
+                // Organize comments with replies
+                const organizedComments = organizeComments(response.data);
+                // console.log('Organized comments:', organizedComments);
+                setComments(organizedComments);
+            } else {
+                // console.log('No comments found or error in response');
+                setComments([]);
+            }
         } catch (error) {
-            console.error('Error loading comments:', error);
+            // console.error('Error loading comments:', error);
             setComments([]);
         } finally {
             setLoadingComments(false);
@@ -83,16 +95,20 @@ const TaskCard = ({task,onEdit,onDelete}) => {
           }
       });
       
-      console.log("COMMENT MAP:",commentMap);
-      console.log("ROOTCOMMENTS:",rootComments);
+      // console.log("COMMENT MAP:",commentMap);
+      // console.log("ROOTCOMMENTS:",rootComments);
       return rootComments;
     }
 
-    const toggleComments = () => {
-        if (!showComments && comments.length === 0) {
-            loadComments();
+    const toggleComments = async () => {
+        if (!showComments) {
+            // Always load comments when showing them
+            await loadComments();
+            // console.log("comments loaded")
         }
+        // console.log("show comments just before toggling:",showComments)
         setShowComments(!showComments);
+        // console.log("show comments after toggle:",showComments)
     };
 
 
@@ -170,11 +186,11 @@ const TaskCard = ({task,onEdit,onDelete}) => {
                 <Clock className="w-4 h-4" />
                 <span className='capitalize'>Created At : {formatDate(task.createdAt)}</span>
               </div>
-              <div className='flex items-center space-x-1 text-sm text-gray-500 break-word'>
+              <div className='flex items-center space-x-1 text-sm text-gray-500 whitespace-normal break-words'>
                 
                 {task.creator && (
                   <div className="flex items-center space-x-1">
-                    <span className='break-words max-w-[170px]'><p className='font-semibold flex'><User className="w-4 h-4" />Created By:</p> {task.creator.email}</span>
+                    <span className='whitespace-normal break-words max-w-[130px] md:max-w-[170px]'><p className='font-semibold flex'><User className="w-4 h-4" />Created By:</p> {task.creator.email}</span>
                   </div>
                 )}
               </div>
@@ -189,7 +205,7 @@ const TaskCard = ({task,onEdit,onDelete}) => {
                 
                 {task.assignee && (
                   <div className="flex items-center space-x-1 " >
-                    <span className='break-words  max-w-[170px]'><p className='font-semibold flex'><User className="w-4 h-4" />Assigned To:</p> {task.assignee.email}</span>
+                    <span className='whitespace-normal break-words max-w-[130px] md:max-w-[170px]'><p className='font-semibold flex'><User className="w-4 h-4" />Assigned To:</p> {task.assignee.email}</span>
                   </div>
                 )}
               </div>     

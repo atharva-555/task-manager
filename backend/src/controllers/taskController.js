@@ -189,7 +189,7 @@ export const getAllTasks = async (req, res) => {
           filters.isDeleted = isDeleted;
         }
 
-        console.log("Filters:",filters)
+        // console.log("Filters:",filters)
         let tasks;
         if (role === ROLES.ADMIN) {
           tasks = await Task.findAll({
@@ -281,7 +281,7 @@ export const updateTask = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
     if (task.assignedTo !==req.user.id && req.user.role !== 'admin') {
-      console.log(req.user.role,task.assignedTo,req.user.id);
+      // console.log(req.user.role,task.assignedTo,req.user.id);
       return res.status(403).json({ error: 'Unauthorized' });
     }
     if (assignedTo) {

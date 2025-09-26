@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import axiosInstance from "./api.js";
 import { setLoading, loginSuccess, loginError, logoutSuccess, registerSuccess, authError, clearError, resetAuth,checkAuthSuccess } from "../store/slices/authSlice.js";
 import { Navigate } from "react-router-dom";
+import { resetTasks } from '../store/slices/taskSlice.js';
 
 export const authService = {
     login:(credentials)=>async (dispatch)=>{
@@ -63,6 +64,7 @@ export const authService = {
         try{
             const response = await axiosInstance.post('/auth/logout');
             if(response.status === 200){
+                dispatch(resetTasks());
                 dispatch(logoutSuccess());
                 toast.success('Logged out successfully!');
             }

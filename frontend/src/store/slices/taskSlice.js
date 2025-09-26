@@ -19,6 +19,9 @@ export const taskSlice = createSlice({
     name:'tasks',
     initialState,
     reducers:{
+        resetTasks: (state) => {
+            return initialState;
+        },
 
         setLoading:(state,action)=>{
             state.loading = action.payload
@@ -117,6 +120,7 @@ export const { setLoading,
     clearFilters, 
     setFilteredTasks, 
     setSelectedTask, 
+    resetTasks,
     addComment, 
     setError, 
     clearError } = taskSlice.actions;

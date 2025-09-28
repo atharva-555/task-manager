@@ -77,17 +77,14 @@ export const login = async (req, res) => {
 
         const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_EXPIRY_TIME });
 
-        console.log("token:", token);
-        res.cookie('jwt', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Secure in production
-            // Since we are using localhost, we need to set sameSite to 'lax'
-            // sameSite: "lax",
-            // ENABLE FOR PRODUCTION
-            sameSite: 'strict',
-            maxAge: parseInt(process.env.TOKEN_EXPIRY_TIME)
-            // maxAge: process.env.TOKEN_EXPIRY_TIME,
-        });
+        // console.log("token:", token);
+       res.cookie('jwt', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production', // Always use secure in production
+                sameSite: 'strict', // For cross-site cookies in production
+                domain: process.env.COOKIE_DOMAIN, // Add your domain here
+                maxAge: parseInt(process.env.TOKEN_EXPIRY_TIME)
+            });
 
         res.json({ message: "Login successful", token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     } catch (err) {
@@ -100,6 +97,7 @@ export const logout = async (req, res) => {
         res.clearCookie('jwt', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
+            domain: process.env.COOKIE_DOMAIN,
             sameSite: 'strict',
         });
         res.json({ message: 'Logout successful' });
@@ -126,8 +124,8 @@ export const getCurrentUser = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        console.log("ENdpoint called");
-        console.log("USER_ID::", user.id);
+        // console.log("ENdpoint called");
+        // console.log("USER_ID::", user.id);
 
         // Return user data in format expected by frontend
         res.json({

@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import "mysql2"; // ensures mysql2 is bundled
 import userModel  from './user.js';
 import taskModel  from './task.js';
 import commentModel  from './comment.js';

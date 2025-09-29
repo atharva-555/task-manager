@@ -117,7 +117,7 @@ const Login = () => {
     }
 
   return (
-    <div className='h-screen items-center sm:mt-16 md:mt-32 '>
+    <div className='h-screen items-center mt-8 md:mt-32 '>
       <div className='shadow-medium rounded-lg w-fit m-auto sm:min-w-fit md:min-w-[500px]'>
        <div className="max-w-2xl m-auto card-header text-center border-b-[1px] border-gray-100 pb-4 pt-8 bg-gray-50">
           <div className="flex items-center justify-center w-16 h-16 mx-auto bg-primary-100 rounded-full mb-4">

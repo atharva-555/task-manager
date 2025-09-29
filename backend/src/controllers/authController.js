@@ -81,8 +81,7 @@ export const login = async (req, res) => {
        res.cookie('jwt', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production', // Always use secure in production
-                sameSite: 'strict', // For cross-site cookies in production
-                domain: process.env.COOKIE_DOMAIN, // Add your domain here
+                sameSite: 'none', // For cross-site cookies in production.Same site = strict is recommended for security but it won't work with cross-site requests
                 maxAge: parseInt(process.env.TOKEN_EXPIRY_TIME)
             });
 
@@ -97,8 +96,7 @@ export const logout = async (req, res) => {
         res.clearCookie('jwt', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            domain: process.env.COOKIE_DOMAIN,
-            sameSite: 'strict',
+            sameSite: 'none',
         });
         res.json({ message: 'Logout successful' });
     } catch (err) {

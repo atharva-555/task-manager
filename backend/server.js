@@ -41,6 +41,6 @@ app.get('/', (req, res) => res.send('Task Manager API'));
 
 sequelize.sync({ force: false }).then(() => {
   app.listen(process.env.PORT, () => {
-    console.log(`Server running on http://localhost:${process.env.PORT}`);
+    console.log(`Server running `);
   });
 }).catch(err => console.error('DB Sync Error:', err));

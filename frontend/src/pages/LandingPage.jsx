@@ -3,6 +3,22 @@ import { Link } from "react-router-dom";
 const LandingPage = () => {
   return (
     <main className="flex-1">
+           {/* Call to Action Section */}
+      <section className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-20 text-center">
+        <h2 className="text-4xl md:text-5xl font-extrabold mb-6">
+          Ready to boost your productivity?
+        </h2>
+        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+          Sign up today and start managing your tasks smarter, faster, and better.
+        </p>
+        <Link to='/register'><button className="bg-white text-blue-600 font-semibold px-8 py-4 rounded-2xl shadow-lg hover:bg-gray-100 transition">
+          Get Started Now
+        </button></Link>
+        <Link to='/login'><button className="ml-4 bg-white text-blue-600 font-semibold px-8 py-4 rounded-2xl shadow-lg hover:bg-gray-100 transition">
+          Login
+        </button></Link>
+        
+      </section>
       {/* Features Section */}
       <section className="py-20 px-6 bg-gray-50">
         <h2 className="text-4xl font-extrabold text-center mb-16 text-gray-800">
@@ -72,22 +88,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Call to Action Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20 text-center">
-        <h2 className="text-4xl md:text-5xl font-extrabold mb-6">
-          Ready to boost your productivity?
-        </h2>
-        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-          Sign up today and start managing your tasks smarter, faster, and better.
-        </p>
-        <Link to='/register'><button className="bg-white text-blue-600 font-semibold px-8 py-4 rounded-2xl shadow-lg hover:bg-gray-100 transition">
-          Get Started Now
-        </button></Link>
-        <Link to='/login'><button className="ml-4 bg-white text-blue-600 font-semibold px-8 py-4 rounded-2xl shadow-lg hover:bg-gray-100 transition">
-          Login
-        </button></Link>
-        
-      </section>
+ 
     </main>
   );
 };

@@ -339,11 +339,11 @@ const AdminDashboard = () => {
                   </button>
 
                   {profileButton && (
-                    <div className={`${profileButton ? "slide-down" : "slide-up"}absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg"}`}>
-                      <div className="py-2">
+                    <div className={`${profileButton ? "slide-down" : "slide-up"}absolute right-0 mt-2 bg-white rounded-lg shadow-lg"}`}>
+                      <div className="p-0 md:p-2">
                         <button
                           onClick={handleLogout}
-                          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100"
+                          className="flex items-center gap-2 px-2 md:px-4 py-2 text-gray-600 hover:bg-gray-100 w-full"
                         >
                           <LogOut className="h-5 w-5 text-red-500" />
                           <span>Logout</span>

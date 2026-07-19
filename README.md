@@ -56,10 +56,14 @@ task-manager/
 - For frontend-specific details, please refer to [Frontend Documentation](./frontend/README.md)
 - For backend-specific details, please refer to [Backend Documentation](./backend/README.md)
 
+<<<<<<< HEAD
 ## 🚀 Live Demo
 
 - Frontend: [https://task-manager-app-tawny.vercel.app](https://task-manager-app-tawny.vercel.app)
 - Backend: [Your Backend URL]
+=======
+## 🚀 Live Demo - (https://task-manager-appx.vercel.app)
+>>>>>>> 42587881fee002fc245758dbdca173e692be738c
 
 ## ✨ Key Features in Detail
 
@@ -67,7 +71,11 @@ task-manager/
 - User management
 - Global task oversight
 - System statistics and analytics
+<<<<<<< HEAD
 - Task delegation and assignment
+=======
+- Task assignment
+>>>>>>> 42587881fee002fc245758dbdca173e692be738c
 
 ### User Features
 - Personal task management
@@ -105,6 +113,7 @@ The application is fully responsive and works seamlessly across:
 - Desktop browsers
 - Tablets
 - Mobile devices
+<<<<<<< HEAD
 
 ## 🤝 Contributing
 
@@ -113,3 +122,5 @@ For detailed information about contributing to this project, please refer to the
 ## 📄 License
 
 MIT License - feel free to use this project for your own learning and development.
+=======
+>>>>>>> 42587881fee002fc245758dbdca173e692be738c
